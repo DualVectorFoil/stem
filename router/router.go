@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/DualVectorFoil/stem/app/handler"
+	"github.com/DualVectorFoil/stem/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -16,11 +17,10 @@ func Init() {
 	userRouter.POST("/login", h.UserCtrl.Login)
 	userRouter.POST("register", h.UserCtrl.Register)
 	//userRouter.POST("modify_pwd", )
+
+	router.Run(":30534")
 }
 
 func notFound(c *gin.Context) {
-	c.JSON(http.StatusNotFound, gin.H{
-		"status": 404,
-		"error":  "404 page not found",
-	})
+	c.JSON(http.StatusNotFound, util.JsonResp(http.StatusNotFound, nil, "404 router not found"))
 }
