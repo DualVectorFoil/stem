@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"github.com/DualVectorFoil/stem/app/conf"
 	"github.com/DualVectorFoil/stem/dao"
 	"github.com/DualVectorFoil/stem/formatter"
-	"github.com/DualVectorFoil/stem/util"
+	"github.com/DualVectorFoil/stem/util/jsonUtil"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -22,12 +23,12 @@ func NewUserCtrl(userDao dao.IUserDao) *UserCtrl {
 func (ctrl *UserCtrl) Login(ctx *gin.Context) {
 	userName := ctx.PostForm("user_name")
 	password := ctx.PostForm("password")
-	token := ctx.PostForm("token")
+	token := ctx.GetHeader(conf.AUTHORIZATION_KEY)
 	if userName == "" {
 		logrus.WithFields(logrus.Fields{
 			"user_name": userName,
 		}).Error("Uncorrected username")
-		ctx.JSON(http.StatusInternalServerError, util.JsonResp(http.StatusInternalServerError, nil, "Uncorrected username"))
+		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected username"))
 		return
 	}
 	if password == "" && token == "" {
@@ -36,15 +37,14 @@ func (ctrl *UserCtrl) Login(ctx *gin.Context) {
 			"password":  "*",
 			"token": token,
 		}).Error("Uncorrected login info")
-		ctx.JSON(http.StatusInternalServerError, util.JsonResp(http.StatusInternalServerError, nil, "Uncorrected login info"))
+		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected login info"))
 		return
 	}
 
-	if token != "" {
-		ctrl.loginWithToken(ctx, userName, token)
-	} else {
-		ctrl.loginWithPwd(ctx, userName, password)
+	if token != "" && ctrl.loginWithToken(ctx, userName, token) || password != "" && ctrl.loginWithPwd(ctx, userName, password) {
+		return
 	}
+	ctx.JSON(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "Uncorrect login info"))
 }
 
 func (ctrl *UserCtrl) Register(ctx *gin.Context) {
@@ -56,7 +56,7 @@ func (ctrl *UserCtrl) Register(ctx *gin.Context) {
 			"user_name": userName,
 			"password":  "*",
 		}).Error("Uncorrected register info")
-		ctx.JSON(http.StatusInternalServerError, util.JsonResp(http.StatusInternalServerError, nil, "Uncorrected register info"))
+		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected register info"))
 		return
 	}
 	if avatarUrl == "" {
@@ -73,14 +73,14 @@ func (ctrl *UserCtrl) Register(ctx *gin.Context) {
 			"avatar_url": "",
 			"err":        err.Error(),
 		}).Error("login failed")
-		ctx.JSON(http.StatusInternalServerError, util.JsonResp(http.StatusInternalServerError, nil, err.Error()))
+		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, err.Error()))
 		return
 	}
 
-	ctx.String(http.StatusOK, util.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
 }
 
-func (ctrl *UserCtrl) loginWithToken(ctx *gin.Context, userName string, token string) {
+func (ctrl *UserCtrl) loginWithToken(ctx *gin.Context, userName string, token string) bool {
 	profileModel, err := ctrl.UserDao.LoginWithToken(ctx, userName, token)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -88,14 +88,15 @@ func (ctrl *UserCtrl) loginWithToken(ctx *gin.Context, userName string, token st
 			"token":   token,
 			"err":        err.Error(),
 		}).Error("login failed")
-		ctx.JSON(http.StatusNonAuthoritativeInfo, util.JsonResp(http.StatusNonAuthoritativeInfo, nil, err.Error()))
-		return
+		return false
 	}
 
-	ctx.String(http.StatusOK, util.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	return true
 }
 
-func (ctrl *UserCtrl) loginWithPwd(ctx *gin.Context, userName string, pwd string) {
+func (ctrl *UserCtrl) loginWithPwd(ctx *gin.Context, userName string, pwd string) bool {
+
 	profileModel, err := ctrl.UserDao.LoginWithPwd(ctx, userName, pwd)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -103,9 +104,9 @@ func (ctrl *UserCtrl) loginWithPwd(ctx *gin.Context, userName string, pwd string
 			"pwd":   pwd,
 			"err":        err.Error(),
 		}).Error("login failed")
-		ctx.JSON(http.StatusNonAuthoritativeInfo, util.JsonResp(http.StatusNonAuthoritativeInfo, nil, err.Error()))
-		return
+		return false
 	}
 
-	ctx.String(http.StatusOK, util.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	return true
 }
