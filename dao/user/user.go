@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-const MAX_REQUEST_TIME = time.Second * 6
-
 type UserDao struct {
 	// TODO client
 }

@@ -6,3 +6,5 @@ import (
 )
 
 var UserCtrl = controller.NewUserCtrl(dao.UserDao)
+
+var ImageCtrl = controller.NewImageCtrl(dao.ImageDao)

@@ -35,7 +35,7 @@ func (ctrl *UserCtrl) Login(ctx *gin.Context) {
 		logrus.WithFields(logrus.Fields{
 			"user_name": userName,
 			"password":  "*",
-			"token": token,
+			"token":     token,
 		}).Error("Uncorrected login info")
 		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected login info"))
 		return
@@ -77,21 +77,21 @@ func (ctrl *UserCtrl) Register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel), ""))
 }
 
 func (ctrl *UserCtrl) loginWithToken(ctx *gin.Context, userName string, token string) bool {
 	profileModel, err := ctrl.UserDao.LoginWithToken(ctx, userName, token)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"user_name":  userName,
-			"token":   token,
-			"err":        err.Error(),
+			"user_name": userName,
+			"token":     token,
+			"err":       err.Error(),
 		}).Error("login failed")
 		return false
 	}
 
-	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel), ""))
 	return true
 }
 
@@ -100,13 +100,13 @@ func (ctrl *UserCtrl) loginWithPwd(ctx *gin.Context, userName string, pwd string
 	profileModel, err := ctrl.UserDao.LoginWithPwd(ctx, userName, pwd)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"user_name":  userName,
-			"pwd":   pwd,
-			"err":        err.Error(),
+			"user_name": userName,
+			"pwd":       pwd,
+			"err":       err.Error(),
 		}).Error("login failed")
 		return false
 	}
 
-	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel)))
+	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel), ""))
 	return true
 }

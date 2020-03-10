@@ -15,7 +15,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		if _, err := jwt.ParseToken(auth); err != nil {
 			ctx.Abort()
 			logrus.Warn(err.Error())
-			ctx.JSON(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "认证信息过期，请重新登陆"))
+			ctx.String(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "认证信息过期，请重新登陆"))
 		}
 		ctx.Next()
 	}

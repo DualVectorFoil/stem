@@ -2,7 +2,7 @@ package jsonUtil
 
 import "encoding/json"
 
-func JsonResp(code int, data interface{}, errMsg ...string) string {
+func JsonResp(code int, data interface{}, errMsg string) string {
 	resp := make(map[string]interface{})
 	resp["status_code"] = code
 	resp["error_msg"] = errMsg

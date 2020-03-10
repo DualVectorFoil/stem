@@ -19,8 +19,9 @@ func Init() {
 	userRouter.POST("register", h.UserCtrl.Register)
 	//userRouter.POST("modify_pwd", )
 
-	privateRouter := router.Group("/private", middleware.AuthMiddleware())
-	privateRouter.POST("/getartworks", h.TestCtrl.Test)
+	//privateRouter := router.Group("/private", middleware.AuthMiddleware())
+	imageRouter := router.Group("/images", middleware.AuthMiddleware())
+	imageRouter.POST("get_images", h.ImageCtrl.GetImages)
 
 	router.Run(":30534")
 }
