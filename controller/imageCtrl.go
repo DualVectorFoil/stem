@@ -10,10 +10,10 @@ import (
 )
 
 type ImageCtrl struct {
-	ImageDao dao.IImageDao
+	ImageDao dao.ImageDao
 }
 
-func NewImageCtrl(imageDao dao.IImageDao) *ImageCtrl {
+func NewImageCtrl(imageDao dao.ImageDao) *ImageCtrl {
 	return &ImageCtrl{
 		ImageDao: imageDao,
 	}

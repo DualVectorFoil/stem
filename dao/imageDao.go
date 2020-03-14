@@ -5,6 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type IImageDao interface {
+type ImageDao interface {
 	GetImages(ctx *gin.Context, itemCount int, userId int64) ([]*model.ImageDetailModel, error)
 }

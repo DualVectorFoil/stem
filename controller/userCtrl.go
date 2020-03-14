@@ -11,52 +11,57 @@ import (
 )
 
 type UserCtrl struct {
-	UserDao dao.IUserDao
+	UserDao dao.UserDao
 }
 
-func NewUserCtrl(userDao dao.IUserDao) *UserCtrl {
+func NewUserCtrl(userDao dao.UserDao) *UserCtrl {
 	return &UserCtrl{
 		UserDao: userDao,
 	}
 }
 
 func (ctrl *UserCtrl) Login(ctx *gin.Context) {
+	phoneNum := ctx.PostForm("phone_num")
 	userName := ctx.PostForm("user_name")
 	password := ctx.PostForm("password")
 	token := ctx.GetHeader(conf.AUTHORIZATION_KEY)
-	if userName == "" {
+	if phoneNum == "" && userName == "" {
 		logrus.WithFields(logrus.Fields{
+			"phone_num": phoneNum,
 			"user_name": userName,
 		}).Error("Uncorrected username")
-		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected username"))
+		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected username"))
 		return
 	}
 	if password == "" && token == "" {
 		logrus.WithFields(logrus.Fields{
+			"phone_num": phoneNum,
 			"user_name": userName,
 			"password":  "*",
 			"token":     token,
 		}).Error("Uncorrected login info")
-		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected login info"))
+		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected login info"))
 		return
 	}
 
-	if token != "" && ctrl.loginWithToken(ctx, userName, token) || password != "" && ctrl.loginWithPwd(ctx, userName, password) {
+	if token != "" && ctrl.loginWithToken(ctx, userName, phoneNum, token) || password != "" && ctrl.loginWithPwd(ctx, userName, phoneNum, password) {
 		return
 	}
-	ctx.JSON(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "Uncorrect login info"))
+	ctx.String(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "Uncorrect login info"))
 }
 
 func (ctrl *UserCtrl) Register(ctx *gin.Context) {
+	phoneNum := ctx.PostForm("phone_num")
 	userName := ctx.PostForm("user_name")
 	password := ctx.PostForm("password")
 	avatarUrl := ctx.PostForm("avatar_url")
-	if userName == "" || password == "" {
+	if phoneNum == "" || userName == "" || password == "" {
 		logrus.WithFields(logrus.Fields{
+			"phone_num": phoneNum,
 			"user_name": userName,
-			"password":  "*",
+			"password":  password,
 		}).Error("Uncorrected register info")
-		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected register info"))
+		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected register info"))
 		return
 	}
 	if avatarUrl == "" {
@@ -65,29 +70,30 @@ func (ctrl *UserCtrl) Register(ctx *gin.Context) {
 		}).Warn("avatar_url is empty")
 	}
 
-	profileModel, err := ctrl.UserDao.Register(ctx, userName, password, avatarUrl)
+	profileModel, err := ctrl.UserDao.Register(ctx, userName, phoneNum, password, avatarUrl)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
+			"phone_num":  phoneNum,
 			"user_name":  userName,
-			"password":   "*",
-			"avatar_url": "",
+			"password":   password,
+			"avatar_url": avatarUrl,
 			"err":        err.Error(),
 		}).Error("login failed")
-		ctx.JSON(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, err.Error()))
+		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, err.Error()))
 		return
 	}
 
 	ctx.String(http.StatusOK, jsonUtil.JsonResp(http.StatusOK, formatter.ProfileFormat(profileModel), ""))
 }
 
-func (ctrl *UserCtrl) loginWithToken(ctx *gin.Context, userName string, token string) bool {
-	profileModel, err := ctrl.UserDao.LoginWithToken(ctx, userName, token)
+func (ctrl *UserCtrl) loginWithToken(ctx *gin.Context, userName string, phoneNum string, token string) bool {
+	profileModel, err := ctrl.UserDao.LoginWithToken(ctx, userName, phoneNum, token)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
+			"phone_num": phoneNum,
 			"user_name": userName,
 			"token":     token,
-			"err":       err.Error(),
-		}).Error("login failed")
+		}).Error("login failed, err: " + err.Error())
 		return false
 	}
 
@@ -95,15 +101,14 @@ func (ctrl *UserCtrl) loginWithToken(ctx *gin.Context, userName string, token st
 	return true
 }
 
-func (ctrl *UserCtrl) loginWithPwd(ctx *gin.Context, userName string, pwd string) bool {
-
-	profileModel, err := ctrl.UserDao.LoginWithPwd(ctx, userName, pwd)
+func (ctrl *UserCtrl) loginWithPwd(ctx *gin.Context, userName string, phoneNum string, pwd string) bool {
+	profileModel, err := ctrl.UserDao.LoginWithPwd(ctx, userName, phoneNum, pwd)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
+			"phone_num": phoneNum,
 			"user_name": userName,
 			"pwd":       pwd,
-			"err":       err.Error(),
-		}).Error("login failed")
+		}).Error("login failed, err: " + err.Error())
 		return false
 	}
 
