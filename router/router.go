@@ -27,5 +27,5 @@ func Init() {
 }
 
 func notFound(c *gin.Context) {
-	c.JSON(http.StatusNotFound, jsonUtil.JsonResp(http.StatusNotFound, nil, "404 router not found"))
+	c.String(http.StatusNotFound, jsonUtil.JsonResp(http.StatusNotFound, nil, "404 router not found"))
 }
