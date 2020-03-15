@@ -30,8 +30,7 @@ require (
 	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
 	golang.org/x/tools v0.0.0-20200313205530-4303120df7d8 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	google.golang.org/genproto v0.0.0-20200313141609-30c55424f95d // indirect
-	google.golang.org/grpc v1.28.0
+	google.golang.org/grpc v1.26.0
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

@@ -10,4 +10,5 @@ type UserDao interface {
 	LoginWithPwd(ctx *gin.Context, userName string, phoneNum string, pwd string) (*model.ProfileModel, error)
 	LoginWithToken(ctx *gin.Context, userName string, phoneNum string, token string) (*model.ProfileModel, error)
 	Register(ctx *gin.Context, userName string, phoneNum string, pwd string, avatarUrl string) (*model.ProfileModel, error)
+	// TODO update user info
 }

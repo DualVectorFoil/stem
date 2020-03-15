@@ -30,7 +30,7 @@ func (ctrl *UserCtrl) Login(ctx *gin.Context) {
 			"phone_num": phoneNum,
 			"user_name": userName,
 		}).Error("Uncorrected username")
-		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected username"))
+		ctx.String(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "Uncorrected username"))
 		return
 	}
 	if password == "" && token == "" {
@@ -40,7 +40,7 @@ func (ctrl *UserCtrl) Login(ctx *gin.Context) {
 			"password":  "*",
 			"token":     token,
 		}).Error("Uncorrected login info")
-		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected login info"))
+		ctx.String(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "Uncorrected login info"))
 		return
 	}
 
@@ -61,7 +61,7 @@ func (ctrl *UserCtrl) Register(ctx *gin.Context) {
 			"user_name": userName,
 			"password":  password,
 		}).Error("Uncorrected register info")
-		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, "Uncorrected register info"))
+		ctx.String(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, "Uncorrected register info"))
 		return
 	}
 	if avatarUrl == "" {
@@ -78,8 +78,8 @@ func (ctrl *UserCtrl) Register(ctx *gin.Context) {
 			"password":   password,
 			"avatar_url": avatarUrl,
 			"err":        err.Error(),
-		}).Error("login failed")
-		ctx.String(http.StatusInternalServerError, jsonUtil.JsonResp(http.StatusInternalServerError, nil, err.Error()))
+		}).Error("register failed")
+		ctx.String(http.StatusNonAuthoritativeInfo, jsonUtil.JsonResp(http.StatusNonAuthoritativeInfo, nil, err.Error()))
 		return
 	}
 

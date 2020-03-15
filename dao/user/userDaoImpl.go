@@ -36,8 +36,7 @@ func (u *UserDaoImpl) LoginWithPwd(ctx *gin.Context, userName string, phoneNum s
 		UserName:  ptr.StringPtr(userName),
 		Email:     ptr.StringPtr(string(loginMutation.Login.Email)),
 		Pwd:       ptr.StringPtr(pwd),
-		PhoneCode: ptr.Int32Ptr(-1),
-		Token:     ptr.StringPtr(string(loginMutation.Login.Token)),
+		PhoneCode: ptr.Int32Ptr(0),
 	})
 	if err != nil {
 		return nil, err
@@ -48,7 +47,7 @@ func (u *UserDaoImpl) LoginWithPwd(ctx *gin.Context, userName string, phoneNum s
 		return nil, errors.New("gprc error, LoginWithPwd failed")
 	}
 
-	return transformProfile(profile), nil
+	return transformProfile(profile, string(loginMutation.Login.Token)), nil
 }
 
 func (u *UserDaoImpl) LoginWithToken(ctx *gin.Context, userName string, phoneNum string, token string) (*model.ProfileModel, error) {
@@ -67,8 +66,7 @@ func (u *UserDaoImpl) LoginWithToken(ctx *gin.Context, userName string, phoneNum
 		UserName:  ptr.StringPtr(userName),
 		Email:     ptr.StringPtr(""),
 		Pwd:       ptr.StringPtr(""),
-		PhoneCode: ptr.Int32Ptr(-1),
-		Token:     ptr.StringPtr(token),
+		PhoneCode: ptr.Int32Ptr(0),
 	})
 	if err != nil {
 		return nil, err
@@ -79,19 +77,18 @@ func (u *UserDaoImpl) LoginWithToken(ctx *gin.Context, userName string, phoneNum
 		return nil, errors.New("gprc error, LoginWithToken failed")
 	}
 
-	refreshTokenProfile, err := account.LoginWithPwd(profile.GetPhoneNum(), profile.GetUserName(), profile.GetPwd(), "-1", profile.GetEmail())
+	refreshTokenProfileMutation, err := account.LoginWithPwd(profile.GetPhoneNum(), profile.GetUserName(), profile.GetPwd(), "0", profile.GetEmail())
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err = u.AccountClient.Login(timeoutCtx, &pb.LoginRequest{
-		Id:        ptr.StringPtr(string(refreshTokenProfile.Login.ID)),
+		Id:        ptr.StringPtr(string(refreshTokenProfileMutation.Login.ID)),
 		PhoneNum:  ptr.StringPtr(phoneNum),
-		UserName:  ptr.StringPtr(string(refreshTokenProfile.Login.Username)),
-		Email:     ptr.StringPtr(string(refreshTokenProfile.Login.Email)),
+		UserName:  ptr.StringPtr(string(refreshTokenProfileMutation.Login.Username)),
+		Email:     ptr.StringPtr(string(refreshTokenProfileMutation.Login.Email)),
 		Pwd:       ptr.StringPtr(""),
-		PhoneCode: ptr.Int32Ptr(-1),
-		Token:     ptr.StringPtr(string(refreshTokenProfile.Login.Token)),
+		PhoneCode: ptr.Int32Ptr(0),
 	})
 	if err != nil {
 		return nil, err
@@ -102,7 +99,7 @@ func (u *UserDaoImpl) LoginWithToken(ctx *gin.Context, userName string, phoneNum
 		return nil, errors.New("gprc error, LoginWithToken failed")
 	}
 
-	return transformProfile(profile), nil
+	return transformProfile(profile, string(refreshTokenProfileMutation.Login.Token)), nil
 }
 
 func (u *UserDaoImpl) Register(ctx *gin.Context, userName string, phoneNum string, pwd string, avatarUrl string) (*model.ProfileModel, error) {
@@ -118,22 +115,24 @@ func (u *UserDaoImpl) Register(ctx *gin.Context, userName string, phoneNum strin
 		UserName:  ptr.StringPtr(userName),
 		Email:     ptr.StringPtr(string(registerMutation.Register.Email)),
 		Pwd:       ptr.StringPtr(pwd),
-		PhoneCode: ptr.Int32Ptr(-1),
-		Token:     ptr.StringPtr(string(registerMutation.Register.Token)),
+		PhoneCode: ptr.Int32Ptr(0),
+		AvatarUrl: ptr.StringPtr(avatarUrl),
 	})
 	if err != nil {
+		account.DeleteAccounts([]string{string(registerMutation.Register.ID)})
 		return nil, err
 	}
 
 	profile := resp.GetProfile()
 	if !resp.GetIsSuccess() || profile == nil {
-		return nil, errors.New("gprc error, LoginWithPwd failed")
+		account.DeleteAccounts([]string{string(registerMutation.Register.ID)})
+		return nil, errors.New("gprc error, register failed")
 	}
 
-	return transformProfile(profile), nil
+	return u.LoginWithPwd(ctx, profile.GetUserName(), profile.GetPhoneNum(), profile.GetPwd())
 }
 
-func transformProfile(profile *pb.Profile) *model.ProfileModel {
+func transformProfile(profile *pb.Profile, token string) *model.ProfileModel {
 	return &model.ProfileModel{
 		ID:           profile.GetId(),
 		PhoneNum:     profile.GetPhoneNum(),
@@ -142,6 +141,6 @@ func transformProfile(profile *pb.Profile) *model.ProfileModel {
 		AvatarUrl:    profile.GetAvatarUrl(),
 		RegisteredAt: profile.GetRegisteredAt(),
 		LastLoginAt:  profile.GetLastLoginAt(),
-		Token:        profile.GetToken(),
+		Token:        token,
 	}
 }

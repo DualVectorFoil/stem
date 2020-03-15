@@ -66,7 +66,7 @@ func LoginWithPwd(phoneNum string, userName string, pwd string, phoneCode string
 	}
 	variables := map[string]interface{}{
 		"registerInClient": graphql.String(conf.USER_POOL_ID),
-		"username":         graphql.String(userName),
+		"username":         graphql.String(phoneNum),
 		"password":         graphql.String(encryptUtil.EncryptPassword([]byte(pwd))),
 		"email":            graphql.String(email),
 		"phone":            graphql.String(phoneNum),
